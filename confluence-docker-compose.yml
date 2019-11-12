@@ -1,0 +1,65 @@
+version: '3.7'
+
+services:
+  confluence:
+    image: atlassian/confluence-server
+    container_name: confluence
+    hostname: confluence
+    restart: unless-stopped
+    networks:
+      - confluencenet
+    volumes:
+      - /var/lib/docker/volumes/confluencedata:/var/atlassian/application-data/confluence:rw,z
+   # ports:
+   #   - '8090:8090'
+   #   - '8091:8091'
+    environment:
+      - 'CATALINA_OPTS= -Xms2048m -Xmx2048m'
+      - 'JVM_MINIMUM_MEMORY=2048m'
+      - 'JVM_MAXIMUM_MEMORY=2048m'
+      - 'ATL_PROXY_NAME=confluence.example.com'
+      - 'ATL_PROXY_PORT=443'
+      - 'ATL_TOMCAT_SCHEME=https'
+      - 'ATL_TOMCAT_SECURE=true'
+      #- 'ATL_TOMCAT_CONTEXTPATH=/confluence'
+
+  postgresql:
+    image: postgres:9.6-alpine
+    container_name: postgres
+    hostname: postgres
+    restart: unless-stopped
+    networks:
+      - confluencenet
+    volumes:
+      - /var/lib/docker/volumes/postgresqldata:/var/lib/postgresql/data:rw,z
+    environment:
+      - 'POSTGRES_USER=confluencedb'
+      - 'POSTGRES_PASSWORD=confluencedbpassword'
+      - 'POSTGRES_DB=confluencedb'
+      - 'POSTGRES_ENCODING=UTF8'
+      - 'POSTGRES_COLLATE=C'
+      - 'POSTGRES_COLLATE_TYPE=C'
+
+  adminer:
+    image: adminer
+    container_name: adminer
+    restart: unless-stopped
+    networks:
+      - confluencenet
+    ports:
+     - '8080:8080'
+
+  nginx:
+    image: nginx:latest
+    container_name: nginx
+    restart: unless-stopped
+    volumes:
+      - /var/lib/docker/volumes/nginx:/etc/nginx:rw,z
+    ports:
+    # - '80:80'
+     - '443:443'
+    networks:
+      - confluencenet
+networks:
+  confluencenet:
+    driver: bridge
