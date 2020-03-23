@@ -10,18 +10,25 @@ services:
       - confluencenet
     volumes:
       - /var/lib/docker/volumes/confluencedata:/var/atlassian/application-data/confluence:rw,z
+      - /var/lib/docker/volumes/ca/cacerts:/opt/java/openjdk/jre/lib/security/cacerts
    # ports:
    #   - '8090:8090'
    #   - '8091:8091'
     environment:
-      - 'CATALINA_OPTS= -Xms2048m -Xmx2048m'
-      - 'JVM_MINIMUM_MEMORY=2048m'
-      - 'JVM_MAXIMUM_MEMORY=2048m'
-      - 'ATL_PROXY_NAME=confluence.example.com'
+      - 'TZ=Europe/Moscow'
+      - 'JVM_MINIMUM_MEMORY=4g'
+      - 'JVM_MAXIMUM_MEMORY=8g'
+      - 'ATL_PROXY_NAME=wiki.example.com'
       - 'ATL_PROXY_PORT=443'
       - 'ATL_TOMCAT_SCHEME=https'
       - 'ATL_TOMCAT_SECURE=true'
+      - 'ATL_TOMCAT_MAXTHREADS=400'
+      - 'ATL_TOMCAT_MINSPARETHREADS=25'
+      - 'ATL_TOMCAT_ACCEPTCOUNT=100'
+      #- 'JVM_SUPPORT_RECOMMENDED_ARGS=-Djavax.net.ssl.trustStore="/var/atlassian/application-data/confluence/cacerts" -Djavax.net.ssl.trustStorePassword="somepassword"'
+
       #- 'ATL_TOMCAT_CONTEXTPATH=/confluence'
+    command: apt-get install -y graphviz
 
   postgresql:
     image: postgres:9.6-alpine
@@ -33,12 +40,15 @@ services:
     volumes:
       - /var/lib/docker/volumes/postgresqldata:/var/lib/postgresql/data:rw,z
     environment:
+      - 'TZ=Europe/Moscow'
       - 'POSTGRES_USER=confluencedb'
-      - 'POSTGRES_PASSWORD=confluencedbpassword'
+      - 'POSTGRES_PASSWORD=somepassworddb'
       - 'POSTGRES_DB=confluencedb'
       - 'POSTGRES_ENCODING=UTF8'
       - 'POSTGRES_COLLATE=C'
       - 'POSTGRES_COLLATE_TYPE=C'
+    #ports:
+    #  - '5432:5432'
 
   adminer:
     image: adminer
@@ -56,8 +66,10 @@ services:
     volumes:
       - /var/lib/docker/volumes/nginx:/etc/nginx:rw,z
     ports:
-    # - '80:80'
+    #- '80:80'
      - '443:443'
+    environment:
+      - 'TZ=Europe/Moscow'
     networks:
       - confluencenet
 networks:
